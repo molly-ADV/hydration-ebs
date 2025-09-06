@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ADVANCED Hydration Celebration</title>
+
+  <!-- Twitch Extension Helper -->
+  <script 
+src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+
+  <style>
+    :root { --fill:#ffb6e9; } /* Light pink water */
+    html,body{ margin:0; height:100%; background:#111; display:grid; 
+place-items:center; overflow:hidden; }
+    .stage{ width:300px; height:500px; position:relative; cursor:pointer; 
+background:#222; border:2px solid #00e5ff55; }
+    .confetti{ position:absolute; inset:0; pointer-events:none; 
+overflow:hidden; z-index:10; }
+    .bit{ position:absolute; width:8px; height:12px; opacity:.95; }
+    .logo{ position:absolute; bottom:-80px; left:50%; 
+transform:translateX(-50%); width:200px; z-index:8; }
+
+    /* Hydration Break banner */
+    .hydration-banner{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%) scale(0.8);
+      width:100%;
+      text-align:center;
+      padding:20px;
+      border-radius:20px;
+      background:linear-gradient(90deg,#00e5ff,#a78bfa,#ff4dd2);
+      box-shadow:0 0 25px rgba(0,229,255,0.8);
+      font-family:sans-serif;
+      font-weight:bold;
+      font-size:28px;
+      color:#fff;
+      opacity:0;
+      z-index:9;
+      transition:opacity 0.5s, transform 0.5s;
+      animation:pulse 2s infinite alternate;
+    }
+    .hydration-banner.show{ opacity:1; transform:translate(-50%,-50%) 
+scale(1); }
+
+    @keyframes pulse {
+      from { box-shadow:0 0 20px rgba(0,229,255,0.6); }
+      to { box-shadow:0 0 40px rgba(255,77,210,0.9); }
+    }
+  </style>
+</head>
+<body>
+  <div id="stage" class="stage">
+    <svg id="svg" viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg" 
+style="width:100%;height:100%">
+      <defs>
+        <linearGradient id="liquidGrad" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".9"/>
+          <stop offset="100%" stop-color="var(--fill)" stop-opacity="1"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Water rising rectangle -->
+      <rect id="liquidRect" x="0" y="0" width="300" height="500" 
+fill="var(--fill)" opacity="0.85" transform="translate(0,500) 
+scale(1,0)"/>
+
+      <!-- Wave surface -->
+      <path id="wave" d="" fill="url(#liquidGrad)" opacity="0.95" />
+    </svg>
+    <div id="confetti" class="confetti"></div>
+
+    <!-- Hydration Break Banner -->
+    <div id="hydrationBanner" class="hydration-banner">Hydration 
+Break</div>
+
+    <!-- ADVANCED Logo at bottom -->
+    <img class="logo" 
+src="https://advanced.gg/cdn/shop/files/ADV-Logo-No-TM_600x.png?v=1686939189" 
+alt="ADVANCED Logo"/>
+  </div>
+
+  <script>
+    const stage = document.getElementById('stage');
+    const liquidRect = document.getElementById('liquidRect');
+    const wave = document.getElementById('wave');
+    const confetti = document.getElementById('confetti');
+    const hydrationBanner = document.getElementById('hydrationBanner');
+
+    const W = 300, H = 500;
+    const clicksGoal = 100;
+    let clicks = 0;
+    let celebrating = false;
+
+    stage.addEventListener('click', () => {
+      if (celebrating) return;
+      clicks = Math.min(clicksGoal, clicks + 1);
+      const pct = clicks / clicksGoal;
+      liquidRect.setAttribute('transform', `translate(0, ${H}) scale(1, 
+${pct})`);
+      drawWave(pct);
+      if (pct >= 1) celebrate();
+    });
+
+    function drawWave(pct){
+      const level = (1 - pct) * H;
+      const amp = Math.max(2, 6 * (1 - pct));
+      const k = 20;
+      const dx = W / k;
+      let d = `M 0 ${level}`;
+      for (let i = 0; i <= k; i++) {
+        const x = i * dx;
+        const y = level + Math.sin((i / k) * Math.PI * 2 + 
+performance.now()/400) * amp;
+        d += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+      }
+      d += ` L ${W} ${H} L 0 ${H} Z`;
+      wave.setAttribute('d', d);
+      requestAnimationFrame(() => drawWave(pct));
+    }
+
+    function celebrate(){
+      celebrating = true;
+      hydrationBanner.classList.add('show');
+      burstConfetti();
+      setTimeout(() => {
+        clicks = 0;
+        celebrating = false;
+        liquidRect.setAttribute('transform', `translate(0, ${H}) scale(1, 
+0)`);
+        drawWave(0);
+        hydrationBanner.classList.remove('show');
+      }, 10000);
+    }
+
+    function burstConfetti(){
+      const colors = ['#ffb6e9', '#ffffff', '#a78bfa', '#22d3ee'];
+      for(let i=0;i<100;i++){
+        const bit = document.createElement('div');
+        bit.className='bit';
+        bit.style.left = (Math.random()*100)+'%';
+        bit.style.top = '0%';
+        bit.style.background = colors[i % colors.length];
+        confetti.appendChild(bit);
+        const xDrift=(Math.random()*2-1)*280;
+        const yDrop=600+Math.random()*240;
+        const rot=360+Math.random()*720;
+        const dur=2000+Math.random()*2000;
+        bit.animate([
+          { transform: `translate(0,0) rotate(0deg)`, opacity: 1 },
+          { transform: `translate(${xDrift}px, ${yDrop}px) 
+rotate(${rot}deg)`, opacity: 0 }
+        ], { duration: dur, easing:'cubic-bezier(.2,.8,.2,1)' });
+        setTimeout(()=>bit.remove(), dur);
+      }
+    }
+
+    liquidRect.setAttribute('transform', `translate(0, ${H}) scale(1, 
+0)`);
+    drawWave(0);
+  </script>
+</body>
+</html>
+
